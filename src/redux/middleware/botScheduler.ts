@@ -69,9 +69,14 @@ export const botScheduler: Middleware<{}, RootState> = (store) => (next) => (act
     try {
         const state = store.getState();
         const idleBots = state.bot.bots.filter((b) => b.status === BOT_STATUS.IDLE);
-        const pendingOrders = state.order.orders.filter(
-            (o) => o.status === ORDER_STATUS.PENDING,
-        );
+        const pendingOrders = state.order.orders
+            .filter((o) => o.status === ORDER_STATUS.PENDING)
+            .slice()
+            .sort((a, b) => {
+                const aPriority = a.type === ORDER_TYPE.VIP ? 0 : 1;
+                const bPriority = b.type === ORDER_TYPE.VIP ? 0 : 1;
+                return aPriority - bPriority;
+            });
         const matches = Math.min(idleBots.length, pendingOrders.length);
         for (let i = 0; i < matches; i++) {
             const bot = idleBots[i];
